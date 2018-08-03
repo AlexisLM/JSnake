@@ -1,5 +1,7 @@
 // @ts-check
-
+/**
+ * Juego de Snake en desarrollo.
+ */
 window.onload = () => {
 
 /** @type {HTMLCanvasElement} - Canvas del juego. */
