@@ -15,7 +15,7 @@ const cheight = canvas.height;
 /** @type {Number} - Tamaño de cada segmento de la serpiente */
 const size = 5;
 /** @type {String} - Color del cuerpo de la serpiente. */
-const bcolor = "black";
+const bcolor = "white";
 /** @type {Number} - Tamaño de cada paso de la serpiente */
 const step = 10;
 /** @type {Number} - Dirección horizontal en la que se desplaza la serpiente.
@@ -51,7 +51,7 @@ var seed = {
  *  @returns {void} Función que limpia el canvas.
  */
 const clearCanvas = () => {
-    ctx.fillStyle = "white";
+    ctx.fillStyle = "#3d3d3d";
     ctx.fillRect(0, 0, cwidth, cheight);
     ctx.fillStyle = bcolor;
 };
@@ -65,6 +65,8 @@ const drawSnake = () => {
         ctx.beginPath();
         ctx.arc(snake[i].xpos, snake[i].ypos, size, 0, 2*Math.PI);
         ctx.fill();
+        ctx.shadowColor = "#ecf0f1";
+        ctx.shadowBlur = 40;
     }
 }
 
@@ -102,6 +104,33 @@ const eatSeed = () => {
         ypos: snake[snake.length - 1].ypos };
 }
 
+/** @function checkCollisions
+ * @returns {boolean} Función que checa si la serpiente colisiona.
+ */
+const checkCollisions = () => {
+    for (var i = 0; i < snake.length - 1; i++)
+        for (var j = i + 1; j < snake.length; j++) {
+            if (snake[i].xpos == snake[j].xpos && 
+                snake[i].ypos == snake[j].ypos)
+                return true;
+        }
+    
+    if (snake[0].xpos + size > cwidth || snake[0].xpos - size < 0 ||
+        snake[0].ypos + size > cheight || snake[0].ypos - size < 0)
+        return true;
+
+    return false;
+}
+
+/** @function gameOver
+ * @returns {void} Función que dibuja el texto de Game Over una vez que has 
+ * perdido.
+ */
+const gameOver = () => {
+    ctx.font = "30px Arial";
+    ctx.fillText("Game Over", cwidth / 2.7, cheight / 2);
+    clearInterval(game);
+}
 
 ctx.fillStyle = bcolor;
 
@@ -111,25 +140,25 @@ ctx.fillStyle = bcolor;
 document.addEventListener("keydown", (e) => {
     switch (e.key) {
         case "ArrowLeft":
-            hdir = -1; //Izquierda
+            hdir = hdir == 1 ? 1 : -1; //Izquierda
             vdir = 0;  //Sin movimiento vertical
             break;
         case "ArrowRight":
-            hdir = 1; //Derecha
+            hdir = hdir == -1 ? -1 : 1; //Derecha
             vdir = 0;  //Sin movimiento vertical
             break;
         case "ArrowUp":
-            vdir = -1; //Arriba
+            vdir = vdir == 1 ? 1 : -1; //Arriba
             hdir = 0; //Sin movimiento horizontal
             break;
         case "ArrowDown":
-            vdir = 1; //Abajo
+            vdir = vdir == -1 ? -1 : 1; //Abajo
             hdir = 0; //Sin movimiento horizontal
             break;
     }
 });
 
-setInterval(() => {
+var game = setInterval(() => {
     
     //Limpiamos el canvas.
     clearCanvas();
@@ -140,6 +169,9 @@ setInterval(() => {
 
     //Dibujamos la serpiente
     drawSnake();
+
+    if (checkCollisions())
+        gameOver();
 
     //Checamos si estamos tocando la semilla, si es así, entonces la comemos.
     if (snake[0].xpos == seed.xpos && snake[0].ypos == seed.ypos) {
@@ -157,5 +189,17 @@ setInterval(() => {
     moveSnake();
 
 } , timeout);
+
+/******************************** Estilo */
+
+/** Margen izquierdo del canvas */
+canvas.style.marginLeft = (window.innerWidth - cwidth) / 2 + "px";
+
+/** Checamos cuando hay una redimensión de pantalla para actualizar el margen
+ * izquierdo del canvas. 
+ */
+window.onresize = () => {
+    canvas.style.marginLeft = (window.innerWidth - cwidth) / 2 + "px";
+}
 
 };
