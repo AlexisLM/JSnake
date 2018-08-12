@@ -4,48 +4,83 @@
  */
 window.onload = () => {
 
+/*******************************************************************************
+ *                              DECLARACIONES                                   
+ ******************************************************************************/
+
 /** @type {HTMLCanvasElement} - Canvas del juego. */
 const canvas = document.querySelector("#canvas");
+
 /** @type {CanvasRenderingContext2D} - Contexto (2D) del canvas. */
 const ctx = canvas.getContext("2d");
+
 /** @type {Number} - Ancho del canvas. */
 const cwidth = canvas.width;
+
 /** @type {Number} - Alto del canvas. */
 const cheight = canvas.height;
+
+/** @type {HTMLButtonElement} - Botón para iniciar el juego */
+const playbutton = document.querySelector("#play");
+
 /** @type {Number} - Tamaño de cada segmento de la serpiente */
 const size = 5;
+
 /** @type {String} - Color del cuerpo de la serpiente. */
 const bcolor = "white";
-/** @type {Number} - Tamaño de cada paso de la serpiente */
-const step = 10;
+
 /** @type {Number} - Dirección horizontal en la que se desplaza la serpiente.
  * +1 = Derecha
  * -1 = Izquierda
  * 0 = Sin movimiento horizontal
  */
-var hdir = 1;
+var hdir;
+
 /** @type {Number} - Dirección vertical en la que se desplaza la serpiente.
  * +1 = Arriba.
  * -1 = Abajo.
  * 0 = Sin movimiento vertical
  */
-var vdir = 0;
+var vdir;
 
 /** @type {Number} - Velocidad del juego. */
-var timeout = 50;
+var timeout;
 
 /** @type {Array} - Lista que almacena pequeños objetos con las coordenadas de
  * cada segmento de la serpiente.
  */
-var snake = [{ xpos: size, ypos: size }];
+var snake;
 
 /** @type {{xpos: number, ypos: number}} - Objeto que almacena las coordenadas 
  * de la semilla.
  */
-var seed = { 
-    xpos: (Math.floor(Math.random() * ((cwidth / size) - size)) + size) * size,
-    ypos: (Math.floor(Math.random() * ((cheight / size) - size)) + size) * size 
-};
+var seed;
+
+/** @type {Number} - Identificador devuelto por el setInterval que maneja las 
+ * repeticiones del juego.
+ */
+var intervalID;
+
+/*******************************************************************************
+ *                               FUNCIONES                                     
+ ******************************************************************************/
+
+/** @function init
+ *  @returns {void} Función que inicializa todo lo necesario para la ejecución
+ * del juego.
+ */
+const init = () => {
+    timeout = 50;
+    snake = [{ xpos: size, ypos: size }];
+    seed = { 
+        xpos: (Math.floor(Math.random() * ((cwidth / size) - size)) + size) * 
+        size,
+        ypos: (Math.floor(Math.random() * ((cheight / size) - size)) + size) * 
+        size 
+    };
+    hdir = 1;
+    vdir = 0;
+}
 
 /** @function clearCanvas
  *  @returns {void} Función que limpia el canvas.
@@ -129,10 +164,48 @@ const checkCollisions = () => {
 const gameOver = () => {
     ctx.font = "30px Arial";
     ctx.fillText("Game Over", cwidth / 2.7, cheight / 2);
-    clearInterval(game);
+    clearInterval(intervalID);
+    playbutton.style.display = "inline-block";
 }
 
-ctx.fillStyle = bcolor;
+/** @function game
+ * @returns {void} Función que maneja el juego completo.
+ */
+const game = () => {
+    
+    //Limpiamos el canvas.
+    clearCanvas();
+
+    //Checamos si no hemos comido la semilla
+    if (seed != null) drawSeed();
+
+    //Dibujamos la serpiente
+    drawSnake();
+
+    if (checkCollisions()) gameOver();
+
+    //Checamos si estamos tocando la semilla, si es así, entonces la comemos.
+    if (snake[0].xpos == seed.xpos && snake[0].ypos == seed.ypos) {
+        eatSeed();
+        seed = {
+            xpos: (Math.floor(Math.random() * ((cwidth / size) - size)) + size) 
+            * size,
+            ypos: (Math.floor(Math.random() * ((cheight / size) - size)) + size)
+            * size 
+        };
+        timeout -= 2;
+        clearInterval(intervalID);
+        intervalID = setInterval(game, timeout);    
+    }
+    
+    //Movemos a la serpiente.
+    moveSnake();
+    console.log(snake[0]);
+};
+
+/*******************************************************************************
+ *                               EJECUCIÓN                                      
+ ******************************************************************************/
 
 /**
  * Manejamos los eventos del teclado para darle movimiento a la serpiente.
@@ -158,48 +231,32 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-var game = setInterval(() => {
-    
-    //Limpiamos el canvas.
-    clearCanvas();
+playbutton.addEventListener("click", (e) => {
+    init();
+    playbutton.style.display = "none";
+    intervalID = setInterval(game, timeout);
+});
 
-    //Checamos si no hemos comido la semilla
-    if (seed != null)
-        drawSeed();
+clearCanvas();
+ctx.fillStyle = bcolor;
 
-    //Dibujamos la serpiente
-    drawSnake();
-
-    if (checkCollisions())
-        gameOver();
-
-    //Checamos si estamos tocando la semilla, si es así, entonces la comemos.
-    if (snake[0].xpos == seed.xpos && snake[0].ypos == seed.ypos) {
-        eatSeed();
-        seed = {
-            xpos: (Math.floor(Math.random() * ((cwidth / size) - size)) + size) 
-            * size,
-            ypos: (Math.floor(Math.random() * ((cheight / size) - size)) + size)
-            * size 
-        };
-        timeout -= 20;
-    }
-    
-    //Movemos a la serpiente.
-    moveSnake();
-
-} , timeout);
-
-/******************************** Estilo */
+/*******************************************************************************
+ *                                  ESTILO                                      
+ ******************************************************************************/
 
 /** Margen izquierdo del canvas */
 canvas.style.marginLeft = (window.innerWidth - cwidth) / 2 + "px";
+
+playbutton.style.left = (window.innerWidth - cwidth) / 2 + (cwidth / 2.7) + "px";
+playbutton.style.top = cheight / 2 + 30 + "px";
 
 /** Checamos cuando hay una redimensión de pantalla para actualizar el margen
  * izquierdo del canvas. 
  */
 window.onresize = () => {
     canvas.style.marginLeft = (window.innerWidth - cwidth) / 2 + "px";
+    playbutton.style.left = (window.innerWidth - cwidth) / 2 + (cwidth / 2.7) 
+        + "px";
 }
 
 };
