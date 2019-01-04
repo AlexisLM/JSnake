@@ -61,6 +61,11 @@ var seed;
  */
 var intervalID;
 
+/** @type {{xpos: number, ypos: number}} - Objeto que almacena las coordenadas
+ * de la posición anterior de la cabeza de la serpiente.
+ */
+var snake_old_pos;
+
 /*******************************************************************************
  *                               FUNCIONES                                     
  ******************************************************************************/
@@ -72,6 +77,7 @@ var intervalID;
 const init = () => {
     timeout = 50;
     snake = [{ xpos: size, ypos: size }];
+    snake_old_pos = { xpos: 0, ypos: 0 };
     seed = { 
         xpos: (Math.floor(Math.random() * ((cwidth / size) - size)) + size) * 
         size,
@@ -211,6 +217,10 @@ const game = () => {
  * Manejamos los eventos del teclado para darle movimiento a la serpiente.
  */
 document.addEventListener("keydown", (e) => {
+    if ( snake_old_pos.xpos == snake[0].xpos && 
+        snake_old_pos.ypos == snake[0].ypos )
+        return;
+
     switch (e.key) {
         case "ArrowLeft":
             hdir = hdir == 1 ? 1 : -1; //Izquierda
@@ -229,6 +239,8 @@ document.addEventListener("keydown", (e) => {
             hdir = 0; //Sin movimiento horizontal
             break;
     }
+    snake_old_pos.xpos = snake[0].xpos;
+    snake_old_pos.ypos = snake[0].ypos;
 });
 
 playbutton.addEventListener("click", (e) => {
